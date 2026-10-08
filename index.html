@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Three days a week — dumbbells and a mat</title>
+<title>Two days a week — dumbbells and a mat</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
@@ -299,7 +299,7 @@
  
 <header>
   <p class="kicker">Built for a mat, a pair of adjustable dumbbells, and nothing else</p>
-  <h1>Three days<em>a week.</em></h1>
+  <h1>Two days<em>a week.</em></h1>
   <div class="status" id="status"></div>
   <figure class="heroFig">
     <svg viewBox="0 0 200 200" role="img" aria-label="Animated figure performing a goblet squat" data-fig="gobletSquat"></svg>
@@ -317,7 +317,7 @@
     <div class="tabs" role="tablist" aria-label="Choose a session">
       <button class="tab" role="tab" aria-selected="true" data-day="1">Day 1</button>
       <button class="tab" role="tab" aria-selected="false" data-day="2">Day 2</button>
-      <button class="tab" role="tab" aria-selected="false" data-day="3">Day 3</button>
+      <button class="tab" role="tab" aria-selected="false" data-day="3">Optional</button>
     </div>
     <button class="motion" id="motionBtn">Pause the animations</button>
   </div>
@@ -632,7 +632,7 @@ ohp:{
 },
  
 pullover:{
-  name:"Dumbbell pullover", reps:"4 \u00d7 10-12", db:"near", props:MAT,
+  name:"Dumbbell pullover", reps:"3 \u00d7 10-12", db:"near", props:MAT,
   video:"https://www.youtube.com/shorts/FYR_UbzJiew",
   works:"Lats and the ribcage side of your chest.",
   cues:["Lie on your back, knees bent. Hold one dumbbell with both hands over your chest.",
@@ -725,7 +725,7 @@ reverseCrunch:{
 },
  
 closeGripPress:{
-  name:"Close-grip floor press", reps:"4 \u00d7 10-15", db:"both", props:MAT,
+  name:"Close-grip floor press", reps:"3 \u00d7 10-15", db:"both", props:MAT,
   video:"https://www.youtube.com/shorts/YS48UyxuidU",
   works:"Triceps first, chest second.",
   cues:["Same setup as the floor press, but hold the dumbbells close together over your chest.",
@@ -762,7 +762,7 @@ reverseLunge:{
         "Step one foot back and lower until your back knee nearly touches the floor.",
         "Push through your front heel to step back to standing.",
         "Alternate legs. Left and right together counts as one rep, so a set is 16 steps."],
-  watch:"Stepping backwards is much kinder to your knees than lunging forwards. Alternating rather than doing all reps on one side keeps day three inside the hour.",
+  watch:"Stepping backwards is much kinder to your knees than lunging forwards. Alternating rather than doing all reps on one side keeps the optional day short.",
   a:mk({hip:[100,116],spine:-90, uaN:86,faN:88, uaF:94,faF:92,
         ftN:[103,180],kbN:-1, ftF:[97,180],kbF:-1}),
   b:mk({hip:[100,128],spine:-90, uaN:86,faN:88, uaF:94,faF:92,
@@ -818,7 +818,7 @@ deadBug:{
         "Press your lower back flat into the mat and keep it there for every rep.",
         "Slowly reach one arm back past your ear while straightening the opposite leg towards the floor.",
         "Return both, then do the other pair. Move slowly, and breathe out as you extend."],
-  watch:"This is the one ab movement in the plan that is not about size, and that is deliberate. Three days a week of curling your spine needs one movement that trains the opposite job. The moment your lower back lifts off the mat you have gone too far, so shorten the reach.",
+  watch:"This is the one ab movement in the plan that is not about size, and that is deliberate. Both core days finish by curling your spine, so this trains the opposite job. The moment your lower back lifts off the mat you have gone too far, so shorten the reach.",
   a:mk({hip:[114,171],spine:183, uaN:-85,faN:-88, uaF:-89,faF:-92,
         thN:-70,shN:0, thF:-74,shF:-4}),
   b:mk({hip:[114,171],spine:183, uaN:-85,faN:-88, uaF:200,faF:205,
@@ -831,25 +831,24 @@ const DAYS = [
   blocks:[
    {label:"Superset A \u2014 alternate the two, rest 90 seconds after each pair", items:["floorPress","oneArmRow"]},
    {label:"Superset B \u2014 legs, alternate the two", items:["gobletSquat","rdl"]},
-   {label:"Triset C \u2014 cycle all three, then rest", items:["floorFlye","hammerCurl","lateralRaise"]},
+   {label:"Triset C \u2014 chest, arms and rear shoulders, cycle all three, then rest", items:["floorFlye","hammerCurl","rearDeltFlye"]},
    {label:"Finish with", items:["weightedCrunch"]}
   ]},
- {n:2, title:"Overhead and single leg", note:"Shoulders lead, and each leg works on its own.",
+ {n:2, title:"Overhead, rows, single leg", note:"Shoulders and your heaviest back work lead, then each leg works on its own.",
   blocks:[
-   {label:"Superset A \u2014 alternate the two, rest 90 seconds after each pair", items:["ohp","pullover"]},
-   {label:"Superset B \u2014 legs and bodyweight pressing", items:["bulgarian","pushup"]},
-   {label:"Superset C \u2014 arms", items:["altCurl","tricepsExt"]},
+   {label:"Superset A \u2014 alternate the two, rest 90 seconds after each pair", items:["ohp","bentOverRow"]},
+   {label:"Superset B \u2014 legs and triceps pressing", items:["bulgarian","closeGripPress"]},
+   {label:"Triset C \u2014 arms and side shoulders, cycle all three, then rest", items:["altCurl","tricepsExt","lateralRaise"]},
    {label:"Finish with", items:["reverseCrunch"]}
   ]},
- {n:3, title:"Rows, shoulders, balance", note:"Higher reps, lighter weights, and the heaviest back work of the week.",
+ {n:3, optional:true, title:"Top-up", note:"Only if you have time, about 30 minutes. Nothing here appears on days 1 or 2, so doing it or skipping it never changes your weights on those days, and the plan always points you back to whichever core day is due.",
   blocks:[
-   {label:"Superset A \u2014 alternate the two, rest 90 seconds after each pair", items:["closeGripPress","bentOverRow"]},
-   {label:"Superset B \u2014 legs", items:["reverseLunge","singleLegRDL"]},
-   {label:"Triset C \u2014 cycle all three, then rest",
-    items:[{key:"lateralRaise",reps:"4 \u00d7 12-15"},"rearDeltFlye","hammerCurl"]},
+   {label:"Superset A \u2014 alternate the two, rest 90 seconds after each pair", items:["pushup","pullover"]},
+   {label:"Superset B \u2014 legs, alternate the two", items:["reverseLunge","singleLegRDL"]},
    {label:"Finish with", items:["deadBug"]}
   ]}
 ];
+function dayLabel(n){ const d=DAYS.find(x=>x.n===n); return d && d.optional ? "Optional day" : "Day "+n; }
  
 /* ============ storage: window.storage, then localStorage, then memory ============ */
 const KEY="ianWorkoutLog_v1";
@@ -1033,10 +1032,15 @@ function entriesFor(key){
   return out;
 }
 function lastEntry(key){ const a=entriesFor(key); return a.length? a[a.length-1] : null; }
+// Rotates through the core days only. Optional sessions, and anything logged
+// under the old three-day plan's day 3, are skipped when working out what is next.
 function nextDay(){
-  if(!DATA.history.length) return 1;
-  const last=DATA.history[DATA.history.length-1].day;
-  return last>=3 ? 1 : last+1;
+  const core=DAYS.filter(d=>!d.optional).map(d=>d.n);
+  for(let i=DATA.history.length-1;i>=0;i--){
+    const at=core.indexOf(DATA.history[i].day);
+    if(at>=0) return core[(at+1)%core.length];
+  }
+  return core[0];
 }
  
 /* ---------- the progression rule ---------- */
@@ -1161,11 +1165,12 @@ DAYS.forEach(day=>{
   sec.setAttribute("role","tabpanel");
   const btn=document.createElement("button");
   btn.className="startBtn";
-  btn.innerHTML='Start day '+day.n+' session<small>Guides you set by set, no thinking required</small>';
+  btn.innerHTML=(day.optional ? 'Start the optional session' : 'Start day '+day.n+' session')+
+    '<small>Guides you set by set, no thinking required</small>';
   btn.addEventListener("click",()=>startSession(day.n));
   const head=document.createElement("div");
   head.className="dayHead";
-  head.innerHTML='<h2>Day '+day.n+' \u2014 '+day.title+'</h2><p>'+day.note+'</p>';
+  head.innerHTML='<h2>'+dayLabel(day.n)+' \u2014 '+day.title+'</h2><p>'+day.note+'</p>';
   sec.appendChild(head); sec.appendChild(btn);
   day.blocks.forEach(b=>{
     const bl=document.createElement("div");
@@ -1260,7 +1265,7 @@ function renderStep(){
   const pct=Math.round(qi/Q.length*100);
   const setSteps=Q.filter(x=>x.type==="set").length;
   const setsDone=Q.slice(0,qi).filter(x=>x.type==="set").length;
-  const meta="Day "+sessDay+" \u00b7 set "+Math.min(setsDone+1,setSteps)+" of "+setSteps;
+  const meta=dayLabel(sessDay)+" \u00b7 set "+Math.min(setsDone+1,setSteps)+" of "+setSteps;
  
   if(st.type==="rest"){
     restLeft=st.sec;
@@ -1358,7 +1363,7 @@ function renderReview(){
           '<button data-f="hard" aria-pressed="false">Hard</button>'+
         '</div></div>';
     }).join("")+
-    '<button class="bigBtn alt" id="saveBtn">Save the session</button>', 100, "Day "+sessDay+" \u00b7 review");
+    '<button class="bigBtn alt" id="saveBtn">Save the session</button>', 100, dayLabel(sessDay)+" \u00b7 review");
   sessEl.querySelectorAll(".feelRow").forEach(row=>{
     row.querySelectorAll("[data-f]").forEach(b=>{
       b.addEventListener("click",()=>{
@@ -1382,7 +1387,7 @@ function saveSession(){
   }).join("");
   shell('<h2 class="sessName">Logged.</h2>'+
     '<p class="sessTarget">Week '+weekNo()+' \u00b7 '+DATA.history.length+' sessions in. Here is what changes next time:</p>'+
-    recs+'<button class="bigBtn" id="closeBtn">Back to the plan</button>', 100, "Day "+sessDay+" \u00b7 saved");
+    recs+'<button class="bigBtn" id="closeBtn">Back to the plan</button>', 100, dayLabel(sessDay)+" \u00b7 saved");
   document.getElementById("closeBtn").addEventListener("click",quitSession);
 }
  
@@ -1516,4 +1521,3 @@ load().then(()=>{ refreshPlan(); showDay(nextDay()); return restoreHandle(); }).
 </script>
 </body>
 </html>
- 
