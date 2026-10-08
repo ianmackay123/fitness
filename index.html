@@ -262,16 +262,11 @@
   .cueBox p{margin:0 0 8px;font-size:15px}
   .cueBox p:last-child{margin:0}
  
-  .feelRow{background:var(--chalk);border:2px solid var(--ink);border-radius:3px;padding:12px 14px;margin-bottom:10px}
-  .feelRow h4{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:17px;margin:0 0 3px}
-  .feelRow .did{font-size:14px;margin:0 0 9px;color:#4a5257}
-  .feelBtns{display:flex;gap:7px}
-  .feelBtns button{
-    flex:1;padding:9px 3px;cursor:pointer;font-family:"Bricolage Grotesque",sans-serif;
-    font-weight:600;font-size:13px;background:var(--concrete);color:var(--ink);
-    border:2px solid var(--ink);border-radius:3px;
-  }
-  .feelBtns button[aria-pressed="true"]{background:var(--signal)}
+  .sumRow{background:var(--chalk);border:2px solid var(--ink);border-radius:3px;padding:12px 14px;margin-bottom:10px}
+  .sumRow h4{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:17px;margin:0 0 3px}
+  .sumRow .did{font-size:14px;margin:0 0 7px;color:#4a5257}
+  .sumRow .did .chip{margin-left:6px;color:var(--ink)}
+  .sumRow .advice{font-size:15px;margin:0}
  
   /* ---------- progress view ---------- */
   .progCard{background:var(--chalk);border:2px solid var(--ink);border-radius:3px;padding:13px 15px;margin-bottom:10px}
@@ -331,11 +326,12 @@
  
   <section class="note">
     <h2>How the weight decisions get made</h2>
-    <p>You do not have to think about this during a session. Log what you lift, say afterwards whether it felt easy, about right, or hard, and the plan works out the rest. The rule underneath it:</p>
+    <p>You do not have to think about this during a session. Log the weight and reps for each set and the plan works out the rest. The rule underneath it:</p>
     <ol>
       <li><strong>Leave one or two reps in the tank.</strong> Stop a set when you could have done one or two more with good form, not when you physically cannot move.</li>
-      <li><strong>Hit the top of the rep range on every set and the weight goes up.</strong> Unless you said it felt hard, in which case you repeat it once more to consolidate.</li>
-      <li><strong>Stuck at the same weight three sessions running?</strong> Drop about 10 per cent and build back. That is a stall, not a failure, and backing off is how you get through it.</li>
+      <li><strong>Hit the top of the rep range on every set, three sessions in a row at the same weight, and it goes up one step.</strong> Each exercise comes round once a week, so that is roughly one step every three weeks.</li>
+      <li><strong>Fall below the bottom of the range on any set, two sessions in a row, and it drops one step.</strong> One bad day changes nothing.</li>
+      <li><strong>Anything in between, same weight.</strong> Keep chasing the top of the range on every set.</li>
       <li><strong>Give it eight weeks.</strong> Strength moves in a few sessions, visible size takes longer.</li>
     </ol>
   </section>
@@ -1043,51 +1039,65 @@ function nextDay(){
   return core[0];
 }
  
-/* ---------- the progression rule ---------- */
+/* ---------- the progression rule ----------
+   Up:   the top of the rep range on every set, UP_RUN sessions running at the same weight.
+   Down: below the bottom of the range on any set, DOWN_RUN sessions running at the same weight.
+   Anything else: same weight. No effort rating involved. */
+const UP_RUN=3, DOWN_RUN=2;
+function runAtWeight(hist, test){
+  const w=hist[hist.length-1].weight; let n=0;
+  for(let i=hist.length-1;i>=0;i--){
+    const e=hist[i], reps=e.reps||[];
+    if(e.weight===w && reps.length && test(reps)) n++; else break;
+  }
+  return n;
+}
 function recommend(key){
   const r=repRange(key), last=lastEntry(key), kind=loadKind(key);
   if(!last) return {code:"new", chip:"First time",
     text: kind==="none"
       ? "Aim for "+r.label+" slow, controlled reps. Quality first, numbers later."
       : "Pick a weight you could manage about "+r.high+" times with two reps left in you. Log it and the plan takes over."};
-  const done=last.reps||[];
-  const allTop = done.length>0 && done.every(v=>v>=r.high);
-  const anyLow = done.some(v=>v<r.low);
   const hist=entriesFor(key);
-  let stall=0;
-  for(let i=hist.length-1;i>=0;i--){ if(hist[i].weight===last.weight && !(hist[i].reps||[]).every(v=>v>=r.high)) stall++; else break; }
- 
+  const clean=runAtWeight(hist, reps=>reps.every(v=>v>=r.high));
+  const short=runAtWeight(hist, reps=>reps.some(v=>v<r.low));
+  const lbl=w=> (kind==="optional" && !w) ? "bodyweight" : wLabel(key,w);
+  const left=UP_RUN-clean, sess=n=>n+" session"+(n===1?"":"s");
+  const more= left===1 ? "One more session" : left+" more sessions";
+
   if(kind==="none"){
-    if(allTop) return {code:"up", chip:"Slow it down",
-      text:"You are hitting "+r.high+" every set. Add a second to the lowering phase rather than chasing more reps."};
+    if(clean>=UP_RUN) return {code:"up", chip:"Slow it down",
+      text:"Every set hit "+r.high+", "+sess(clean)+" running. Add a second to the lowering phase rather than chasing more reps."};
+    if(clean>0) return {code:"hold", chip:clean+" of "+UP_RUN,
+      text:"Every set hit "+r.high+" last time. "+more+" like that and you slow the movement down."};
     return {code:"hold", chip:"Chase "+r.high, text:"Work towards "+r.high+" clean reps on every set."};
   }
-  if(allTop && last.feel!=="hard"){
-    if(kind==="optional"){ const d=2;
-      return {code:"up", chip:"Add "+d+"kg", delta:d, next:last.weight+d,
-        text:"Every set hit "+r.high+" reps, so it is time to add load. Put "+(last.weight+d)+"kg in a backpack and expect to drop back to around "+r.low+" reps."}; }
-    const nx=notchUp(last.weight);
-    if(nx<=last.weight) return {code:"up", chip:"Maxed out", next:last.weight,
-      text:"You are at the top of your dumbbells and still hitting "+r.high+" reps. Progress without weight: take three to four seconds lowering each rep, add a one-second pause at the hardest point, or add a fourth set."};
-    return {code:"up", chip:"Go to "+nx+"kg", delta:nx-last.weight, next:nx,
-      text:"Every set hit "+r.high+" reps. Next time use "+wLabel(key,nx)+" and expect to drop back to around "+r.low+" reps."};
+
+  // what "up one step" would be, so it can be quoted before it happens
+  const nx = kind==="optional" ? last.weight+2 : notchUp(last.weight);
+  const maxed = nx<=last.weight;
+
+  if(clean>=UP_RUN){
+    if(maxed) return {code:"up", chip:"Maxed out", next:last.weight,
+      text:"You are at the top of your dumbbells and have hit "+r.high+" on every set "+sess(clean)+" running. Progress without weight: take three to four seconds lowering each rep, add a one-second pause at the hardest point, or add a fourth set."};
+    return {code:"up", chip:(kind==="optional" ? "Add 2kg" : "Go to "+nx+"kg"), next:nx,
+      text:"Every set hit "+r.high+", "+sess(clean)+" running at "+lbl(last.weight)+". Next time use "+
+        (kind==="optional" ? nx+"kg in a backpack" : wLabel(key,nx))+" and expect to drop back to around "+r.low+" reps."};
   }
-  if(allTop && last.feel==="hard")
-    return {code:"hold", chip:"Repeat", next:last.weight,
-      text:"You got the reps but it was a grind. Repeat "+wLabel(key,last.weight)+" once more, then move up."};
-  if(stall>=3){
-    let t = kind==="optional" ? Math.max(0,Math.round(last.weight*0.9)) : snap(last.weight*0.9);
-    if(kind!=="optional" && t>=last.weight) t=notchDown(last.weight);
-    return {code:"reset", chip:"Back off", next:t,
-      text:"Three sessions stuck at "+wLabel(key,last.weight)+". Drop to "+wLabel(key,t)+" and build back up. This is normal."};
-  }
-  if(anyLow && last.feel==="hard"){
+  if(short>=DOWN_RUN){
     const t = kind==="optional" ? Math.max(0,last.weight-2) : notchDown(last.weight);
-    return {code:"down", chip:"Ease off", next:t,
-      text:"You fell below "+r.low+" reps and it felt hard. Drop to "+wLabel(key,t)+" and earn it back."};
+    if(t<last.weight) return {code:"down", chip:"Drop to "+t+"kg", next:t,
+      text:"Below "+r.low+" reps on a set "+sess(short)+" running at "+lbl(last.weight)+". Drop to "+lbl(t)+" and build back up."};
+    return {code:"hold", chip:"Same weight", next:last.weight,
+      text:"Below "+r.low+" reps on a set "+sess(short)+" running, but there is nothing lighter to drop to. Stay at "+lbl(last.weight)+" and take a little longer between sets."};
   }
+  if(clean>0) return {code:"hold", chip:clean+" of "+UP_RUN, next:last.weight,
+    text:"Every set hit "+r.high+" at "+lbl(last.weight)+". "+more+" like that and it goes up"+
+      (maxed ? "." : " to "+(kind==="optional" ? nx+"kg" : wLabel(key,nx))+".")};
+  if(short===1) return {code:"hold", chip:"Same weight", next:last.weight,
+    text:"A set fell below "+r.low+" reps last time. Stay at "+lbl(last.weight)+". If it happens again next time, the weight drops a step."};
   return {code:"hold", chip:"Same weight", next:last.weight,
-    text:"Stay at "+wLabel(key,last.weight)+" and chase "+r.high+" reps on every set."};
+    text:"Stay at "+lbl(last.weight)+" and chase "+r.high+" reps on every set. Three sessions in a row at the top of the range and it goes up."};
 }
 function suggestedWeight(key){
   const rec=recommend(key), last=lastEntry(key);
@@ -1255,12 +1265,12 @@ function shell(inner, pct, meta){
       '<div class="pbar"><i style="width:'+pct+'%"></i></div></div>'+
     '<div class="sessBody">'+inner+'</div>';
   document.getElementById("quitBtn").addEventListener("click",()=>{
-    if(Object.keys(sessLog).length===0 || confirm("End the session? Anything you have not reviewed will be lost.")) quitSession();
+    if(Object.keys(sessLog).length===0 || confirm("End the session early? Nothing from this session will be saved.")) quitSession();
   });
 }
 function renderStep(){
   if(tick){clearInterval(tick); tick=null;}
-  if(qi>=Q.length) return renderReview();
+  if(qi>=Q.length) return finishSession();
   const st=Q[qi];
   const pct=Math.round(qi/Q.length*100);
   const setSteps=Q.filter(x=>x.type==="set").length;
@@ -1299,7 +1309,7 @@ function renderStep(){
     '<h2 class="sessName">'+ex.name+'</h2>'+
     '<p class="sessTarget">Set '+st.set+' of '+st.of+' \u00b7 <span>'+st.r.label+' reps'+(st.r.suffix?" "+st.r.suffix:"")+'</span></p>'+
     '<div class="sessFig"><svg id="sessSvg" viewBox="0 0 200 200" role="img" aria-label="'+ex.name+'"></svg></div>'+
-    (st.set===1 && rec.code!=="hold" ? '<div class="cueBox"><p><strong>'+rec.chip+'.</strong> '+rec.text+'</p></div>' : '')+
+    (st.set===1 ? '<div class="cueBox"><p><strong>'+rec.chip+'.</strong> '+rec.text+'</p></div>' : '')+
     '<div class="steppers">'+
       (kind==="none" ? '' :
       '<div class="stepper"><label>'+(kind==="optional" ? "Added weight (0 if none)"
@@ -1339,7 +1349,7 @@ function renderStep(){
     let wv=kind==="none"?0:(parseFloat((document.getElementById("wIn")||{}).value)||0);
     if(usesLadder(st.key)) wv=snap(wv);
     const rv=parseInt(document.getElementById("rIn").value,10)||0;
-    if(!sessLog[st.key]) sessLog[st.key]={key:st.key, weight:wv, reps:[], feel:null};
+    if(!sessLog[st.key]) sessLog[st.key]={key:st.key, weight:wv, reps:[]};
     sessLog[st.key].weight=wv;
     sessLog[st.key].reps.push(rv);
     qi++; renderStep();
@@ -1347,33 +1357,11 @@ function renderStep(){
 }
 function mmss(t){ t=Math.max(0,t); return Math.floor(t/60)+":"+String(t%60).padStart(2,"0"); }
  
-function renderReview(){
-  const keys=Object.keys(sessLog);
-  if(!keys.length) return quitSession();
-  shell(
-    '<h2 class="sessName">How did that feel?</h2>'+
-    '<p class="sessTarget">One tap each. This is what decides your weights next time.</p>'+
-    keys.map(k=>{
-      const e=sessLog[k], ex=EXERCISES[k];
-      return '<div class="feelRow" data-k="'+k+'"><h4>'+ex.name+'</h4>'+
-        '<p class="did">'+(loadKind(k)==="none"?"":wLabel(k,e.weight)+" \u00b7 ")+e.reps.join(", ")+' reps</p>'+
-        '<div class="feelBtns">'+
-          '<button data-f="easy" aria-pressed="false">Easy</button>'+
-          '<button data-f="right" aria-pressed="false">About right</button>'+
-          '<button data-f="hard" aria-pressed="false">Hard</button>'+
-        '</div></div>';
-    }).join("")+
-    '<button class="bigBtn alt" id="saveBtn">Save the session</button>', 100, dayLabel(sessDay)+" \u00b7 review");
-  sessEl.querySelectorAll(".feelRow").forEach(row=>{
-    row.querySelectorAll("[data-f]").forEach(b=>{
-      b.addEventListener("click",()=>{
-        row.querySelectorAll("[data-f]").forEach(x=>x.setAttribute("aria-pressed","false"));
-        b.setAttribute("aria-pressed","true");
-        sessLog[row.dataset.k].feel=b.dataset.f;
-      });
-    });
-  });
-  document.getElementById("saveBtn").addEventListener("click",saveSession);
+// The last set saves the session straight away. Your reps and weights decide
+// the next weights on their own, so there is nothing to rate.
+function finishSession(){
+  if(!Object.keys(sessLog).length) return quitSession();
+  saveSession();
 }
 function saveSession(){
   if(!DATA.startDate) DATA.startDate=today();
@@ -1381,13 +1369,16 @@ function saveSession(){
     date:today(), day:sessDay, week:weekNo(),
     entries:Object.keys(sessLog).map(k=>sessLog[k])});
   save();
-  const recs=Object.keys(sessLog).map(k=>{
-    const r=recommend(k);
-    return '<div class="feelRow"><h4>'+EXERCISES[k].name+'</h4><p class="advice">'+r.text+'</p></div>';
+  const rows=Object.keys(sessLog).map(k=>{
+    const e=sessLog[k], r=recommend(k);
+    return '<div class="sumRow"><h4>'+EXERCISES[k].name+'</h4>'+
+      '<p class="did">'+(loadKind(k)==="none"?"":wLabel(k,e.weight)+" \u00b7 ")+e.reps.join(", ")+' reps '+
+        '<span class="chip '+r.code+'">'+r.chip+'</span></p>'+
+      '<p class="advice">'+r.text+'</p></div>';
   }).join("");
   shell('<h2 class="sessName">Logged.</h2>'+
-    '<p class="sessTarget">Week '+weekNo()+' \u00b7 '+DATA.history.length+' sessions in. Here is what changes next time:</p>'+
-    recs+'<button class="bigBtn" id="closeBtn">Back to the plan</button>', 100, dayLabel(sessDay)+" \u00b7 saved");
+    '<p class="sessTarget">Week '+weekNo()+' \u00b7 '+DATA.history.length+' sessions in. What you did, and what happens next time:</p>'+
+    rows+'<button class="bigBtn" id="closeBtn">Back to the plan</button>', 100, dayLabel(sessDay)+" \u00b7 saved");
   document.getElementById("closeBtn").addEventListener("click",quitSession);
 }
  
@@ -1420,8 +1411,7 @@ function renderProgress(){
           '<span class="chip '+rec.code+'">'+rec.chip+'</span>'+
           '<span style="opacity:.6">'+hist.length+' session'+(hist.length>1?'s':'')+'</span>'+
         '</div>'+
-        '<div class="setRow">'+(last.reps||[]).map(r=>'<b>'+r+'</b>').join("")+
-          (last.feel?'<b>felt '+last.feel+'</b>':'')+'</div>'+
+        '<div class="setRow">'+(last.reps||[]).map(r=>'<b>'+r+'</b>').join("")+'</div>'+
         spark+
         '<p class="advice" style="margin-top:8px">'+rec.text+'</p></div>';
     });
